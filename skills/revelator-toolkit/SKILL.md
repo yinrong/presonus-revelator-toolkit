@@ -3,14 +3,15 @@ name: revelator-toolkit
 description: Diagnose, fix, and tune PreSonus Revelator USB microphones for Android, Windows, and macOS. Use when Revelator works on Windows PC but has no playback or silent recording on Android (Single Mode PID_0D08 vs Multi Mode PID_0D09, PaeDSPUSB.sys RestartDeviceRequest auto-revert), or when tuning Fat Channel EQ/compressor/limiter/reverb presets, fixing headphone monitoring (Blend/Phones), removing clipping/plosives, or running vocal acoustic analysis.
 ---
 
-# PreSonus Revelator Toolkit Skill
+# PreSonus Revelator Exploration & Development Skill
 
-This skill solves two real-world problems for PreSonus Revelator users:
+> **Role of this Skill (Read First):** End users should run the zero-cost pure-local tools (`fix_android_mode.bat`, `scripts/revelator_mode.py`, `scripts/auto_tune.py`) without spending any AI tokens. Activate this skill during **development or when exploring an unsolved hardware, driver, Android HAL, or vocal-tuning edge case**—and once a new fix is verified on real hardware, **graduate it into pure local code in `scripts/` + tests in `tests/`** (see `DEVELOPMENT.md`).
 
-1. **Android USB Audio Recovery (from Windows, no Mac required):** Switching a Revelator trapped in Windows Single Mode (`PID_0D08`, 6-channel) back to Android-required Multi Mode (`PID_0D09`, 2-channel stereo) while disarming the `PaeDSPUSB.sys` kernel driver's silent auto-revert trap.
-2. **Fat Channel Vocal Tuning & Acoustic Analysis:** Managing onboard `.channel` presets, headphone monitoring balance (`Blend` / `Phones`), preamp gain staging, and quantitative audio diagnostics (`analyze.py`, `rec_report.py`, `voice_compare.py`, `cancel.py`, `ir.py`).
+Always run existing zero-cost deterministic tools first before spending tokens reasoning:
+- USB/Driver state: `python scripts/revelator_mode.py diag --json`
+- Vocal diagnosis & `.channel` preset generation: `python scripts/auto_tune.py <vocal.wav> [--ref <ref.wav>] --json`
 
-All scripts referenced below live in `../../scripts/` (or `scripts/` at repo root) and presets live in `../../presets/`.
+All scripts live in `../../scripts/` (repo root `scripts/`) and presets live in `../../presets/`.
 
 ---
 
@@ -86,13 +87,14 @@ Do **not** assume "works on PC -> mic is fine -> phone settings are broken." Rev
 
 Import presets via Universal Control by copying `.channel` files into `~/Documents/PreSonus/Revelator Mic/Fat/` (macOS) or `Documents\PreSonus\Revelator Mic\Fat\` (Windows), then loading into one of the 8 onboard preset slots and assigning it to one of the 4 hardware color buttons. Always verify `Fat Channel on USB Stream Outputs — Ch 1` is ON before disconnecting from PC/Mac.
 
-### Quantitative Acoustic Analysis Scripts (`scripts/`)
+### Quantitative Acoustic Analysis & Auto-Tuning Scripts (`scripts/`)
 
-Run Python scripts with `scripts/py <script.py> ...` (uses `uv` ephemeral deps) or any Python environment with `numpy`, `scipy`, `soundfile`, `librosa`, and `ffmpeg`:
+Run `revelator_mode.py` (stdlib only) and `auto_tune.py` (`numpy` only for WAV) directly with `python`. Run the remaining scripts with `scripts/py <script.py> ...` (uses `uv` ephemeral deps):
 
 | Script | Purpose |
 |---|---|
 | `scripts/revelator_mode.py` | Windows Single ↔ Multi Mode diagnostics, `RestartDeviceRequest` disarmer, and switcher (stdlib only) |
+| `scripts/auto_tune.py <wav> [--ref <ref>]` | Zero-AI vocal analyzer + Fat Channel `.channel` preset generator (`--install` copies straight to UC folder) |
 | `scripts/analyze.py <audio>` | Vocal audit: noise floor, dynamic range, pitch range, spectral balance, sibilance, plosives |
 | `scripts/rec_report.py <a.wav> ...` | Clipped sample count, consecutive clipping runs, plosives, high-frequency clicks, RMS percentiles |
 | `scripts/voice_compare.py <a> <b>` | Spectral band deltas, harmonic-to-noise ratio (HNR), 4–8 kHz flatness, voiced dynamics |
@@ -101,3 +103,15 @@ Run Python scripts with `scripts/py <script.py> ...` (uses `uv` ephemeral deps) 
 | `scripts/burst.sh <name> <amp>` | macOS reproducible 2s pink-noise speaker-to-mic level test (`OUT=./revelator-tests`) |
 | `scripts/click.sh <name>` | macOS 3x 15ms click impulse response capture (`OUT=./revelator-tests`) |
 | `scripts/spkvol.swift` | macOS built-in speaker volume reader/setter (always restore user's original volume after testing) |
+
+---
+
+## Workflow 3: Exploring New Unsolved Issues & Graduating Fixes
+
+Use this playbook when investigating a new Revelator model (`Dynamic`, `io24`, `io44`), a new Windows Universal Control version, or an unfamiliar Android OEM audio HAL bug:
+
+1. **Probe real hardware first (never guess):**
+   - Windows: inspect `paedspusb.inf`, `Microsoft-Windows-Kernel-PnP/Configuration` Event Log, and `python scripts/revelator_mode.py diag --json`.
+   - Android: capture detached `dumpsys usb`, `dumpsys audio`, `/dev/snd/`, and live `logcat` during real playback + capture (when the mic occupies the phone's USB port, run a detached background shell probe on-device and pull logs after reconnecting ADB).
+2. **Verify end-to-end on physical hardware:** Confirm actual USB re-enumeration PID and real non-silent Android audio capture + playback—never sign off on offline unit tests alone.
+3. **Graduate the solution to pure code:** Add deterministic logic to `scripts/`, offline unit tests to `tests/`, and plain-language user steps to `README.md` / `README.zh-CN.md` so end users never pay AI fees for an already-solved problem.

@@ -576,6 +576,22 @@ def cmd_switch(args: argparse.Namespace) -> int:
             )
             return 3
 
+        present_now = list_pnp_presonus_devices(present_only=True)
+        present_modes = set()
+        present_pids = set()
+        for dev in present_now:
+            v, p = parse_vid_pid(dev.get("InstanceId", ""))
+            info = classify_device(v, p)
+            if info and p is not None:
+                present_modes.add(info.mode)
+                present_pids.add(f"0x{p:04X}")
+        if present_modes == {"multi"} and not traps:
+            print(
+                f"ALREADY READY: Device is already in MULTI MODE ({sorted(present_pids)}) "
+                "with 0 RestartDeviceRequest traps. Ready for Android!"
+            )
+            return 0
+
     dll = load_tusbaudio_api(dll_path)
     result = send_mode_switch_request(dll, args.mode, device_index=args.index)
     print(
