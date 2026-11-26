@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+revelator-tests/
+*.wav
+*.m4a
+*.pcm
+*.bak.json
+.DS_Store
+Thumbs.db

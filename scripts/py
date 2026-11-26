@@ -1,0 +1,3 @@
+#!/bin/bash
+# 跑本目录分析脚本的 Python（自带依赖，不用建 venv）。用法: ./py analyze.py x.wav
+exec uv run --quiet --with numpy --with scipy --with soundfile --with librosa python "$@"

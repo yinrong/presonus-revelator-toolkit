@@ -1,0 +1,68 @@
+{
+	"preset_name": "Natural Voice",
+	"opt": {
+		"swapcompeq": 0
+	},
+	"filter": {
+		"hpf": 80.0
+	},
+	"gate": {
+		"on": 0,
+		"keylisten": 0,
+		"expander": 1,
+		"keyfilter": 480.0000915527344,
+		"threshold": -60.0,
+		"range": -60.0,
+		"attack": 0.013999996706843376,
+		"release": 0.5699999928474426
+	},
+	"limit": {
+		"limiteron": 1,
+		"threshold": -1.0
+	},
+	"voicefxopt": {
+		" ": " "
+	},
+	"eq": {
+		"__classid": "{A0A8A068-14F0-4B04-BB6F-AF8329D0E8EE}",
+		"eqallon": 1,
+		"eqgain1": 0.0,
+		"eqq1": 1.0000001192092896,
+		"eqfreq1": 99.99999237060547,
+		"eqbandon1": 1,
+		"eqbandop1": 1,
+		"eqgain2": -6.0,
+		"eqq2": 1.0,
+		"eqfreq2": 220.0,
+		"eqbandon2": 1,
+		"eqgain3": 5.0,
+		"eqq3": 0.8,
+		"eqfreq3": 3500.0,
+		"eqbandon3": 1,
+		"eqgain4": 0.0,
+		"eqq4": 1.0000001192092896,
+		"eqfreq4": 10000.0,
+		"eqbandon4": 1,
+		"eqbandop4": 1
+	},
+	"voicefx": {
+		"__classid": "{98A527BA-2D6E-4B35-BB26-251EC081A067}",
+		"on": 0,
+		"time": 0.022,
+		"feedback": 0.7,
+		"mix": 0.15
+	},
+	"comp": {
+		"__classid": "{870D04F7-212E-4F9C-ADBB-39A97216433F}",
+		"on": 1,
+		"softknee": 1,
+		"automode": 0,
+		"threshold": -30.0,
+		"ratio": 2.0,
+		"attack": 0.02,
+		"release": 0.15,
+		"gain": 15.0,
+		"keyfilter": 40.0,
+		"keylisten": 0
+	}
+}
