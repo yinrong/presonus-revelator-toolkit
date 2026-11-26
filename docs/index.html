@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PreSonus Revelator Android Fix (Windows Single to Multi Mode PID_0D08 → PID_0D09) &amp; Vocal Auto-Tuner</title>
+  <meta name="description" content="Fix PreSonus Revelator microphones that stop working on Android after plugging into Windows (no Mac required). Disarm PaeDSPUSB.sys RestartDeviceRequest auto-revert, switch PID_0D08 to Multi Mode PID_0D09, plus a free zero-AI vocal preset generator." />
+  <meta name="keywords" content="PreSonus Revelator Android not working, Revelator Multi Mode Windows, VID_194F PID_0D08 PID_0D09, PaeDSPUSB.sys RestartDeviceRequest, Revelator unsupported mode, Universal Control Multi Mode, PreSonus Revelator vocal presets" />
+  <link rel="canonical" href="https://yinrong.github.io/presonus-revelator-toolkit/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="PreSonus Revelator Toolkit — Fix Android Audio From Windows (No Mac Needed)" />
+  <meta property="og:description" content="Free local Windows tool to disarm PaeDSPUSB.sys auto-revert and switch PreSonus Revelator from Single Mode (PID_0D08) to Android Multi Mode (PID_0D09), plus zero-AI vocal auto-tuning." />
+  <meta property="og:url" content="https://yinrong.github.io/presonus-revelator-toolkit/" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Why does my PreSonus Revelator work on Windows PC but fail completely on Android?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "PreSonus Revelator stores its USB mode in onboard flash. Windows requires Single Mode (VID_194F&PID_0D08, 6-channel), whereas Android requires Multi Mode (PID_0D09, separate 2-channel stereo UAC2 interfaces). When plugged into Windows, PreSonus's kernel driver PaeDSPUSB.sys executes Config\\RestartDeviceRequest (RequestCode=66 / 0x42) and silently reverts Multi Mode back to Single Mode within ~1 second."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How can I switch PreSonus Revelator back to Multi Mode on Windows without a Mac?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use presonus-revelator-toolkit: run `python scripts/revelator_mode.py disarm --elevate` to remove the PaeDSPUSB.sys RestartDeviceRequest registry key for your USB port, then run `python scripts/revelator_mode.py switch multi` (or double-click fix_android_mode.bat) to send bRequest=0x42 and lock the mic in Multi Mode (PID_0D09)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why does Windows Device Manager say Revelator (unsupported mode)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "In paedspusb.inf, PreSonus labels Multi Mode (PID_0D09) as 'Revelator (unsupported mode)' on Windows. That label confirms your microphone is in Multi Mode and ready for Android, iOS, or macOS."
+        }
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --accent: #38bdf8; --ok: #4ade80; --border: #334155; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px 72px; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 12px; }
+    h2 { font-size: 1.35rem; margin-top: 36px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    p.lead { font-size: 1.1rem; color: #cbd5e1; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+    .btn { display: inline-block; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+    .btn-primary { background: var(--accent); color: #0f172a; }
+    .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin: 16px 0; }
+    pre { background: #020617; border: 1px solid var(--border); border-radius: 8px; padding: 14px; overflow-x: auto; font-size: 0.92rem; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #7dd3fc; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.95rem; }
+    th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; }
+    th { background: #1e293b; }
+    .tag { display: inline-block; background: #064e3b; color: var(--ok); padding: 2px 8px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+    footer { margin-top: 48px; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border); padding-top: 18px; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="tag">100% Free &amp; Local · Zero AI Fees · MIT License</span>
+    <h1>PreSonus Revelator Android Fix (Windows → Multi Mode) &amp; Vocal Auto-Tuner</h1>
+    <p class="lead">
+      Did your PreSonus Revelator suddenly stop playing and recording on Android right after plugging it into a Windows PC—even though it still works fine on Windows?
+      You do <strong>not</strong> need a Mac to fix it.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/yinrong/presonus-revelator-toolkit">View on GitHub</a>
+      <a class="btn btn-secondary" href="https://github.com/yinrong/presonus-revelator-toolkit/releases/latest">Download v1.1.0</a>
+      <a class="btn btn-secondary" href="https://github.com/yinrong/presonus-revelator-toolkit/blob/main/README.zh-CN.md">中文文档</a>
+      <a class="btn btn-secondary" href="https://github.com/yinrong/presonus-revelator-toolkit/blob/main/docs/TECHNICAL_ROOT_CAUSE.md">Technical Root Cause</a>
+    </div>
+
+    <h2>Why It Breaks (The Hidden Windows Kernel Trap)</h2>
+    <div class="card">
+      <p>
+        Android requires <strong>Multi Mode (<code>VID_194F&amp;PID_0D09</code>, 3 independent 2-channel stereo UAC2 interfaces)</strong>.
+        Windows Universal Control uses <strong>Single Mode (<code>PID_0D08</code>, 6-channel)</strong>—which crashes Android USB Audio HAL/DSP (<code>transfer failed</code>, DSP <code>SSR</code>, <code>AudioRecord read -&gt; buffer is mute</code>).
+      </p>
+      <p>
+        Worse, PreSonus's Windows driver (<code>paedspusb.inf</code> → <code>PaeDSPUSB.sys</code>) writes a kernel registry key
+        <code>Config\RestartDeviceRequest</code> (<code>RequestType=64</code>, <code>RequestCode=66 / 0x42</code>, <code>RequestValue=0</code>) on <code>PID_0D09</code>.
+        Within 1 second of plugging a Multi-Mode Revelator into Windows, the driver silently reprograms the mic back to Single Mode—even without opening Universal Control.
+      </p>
+    </div>
+
+    <h2>3-Step Fix on Windows (No Mac Required)</h2>
+    <pre><code>git clone https://github.com/yinrong/presonus-revelator-toolkit.git
+cd presonus-revelator-toolkit
+
+# 1. Diagnose USB mode (PID_0D08 vs PID_0D09) and active RestartDeviceRequest traps
+python scripts/revelator_mode.py diag
+
+# 2. Disarm the PaeDSPUSB.sys auto-revert registry key (backs up JSON first)
+python scripts/revelator_mode.py disarm --elevate --backup trap-backup.json
+
+# 3. Switch to Android Multi Mode (PID_0D09) and verify 10 seconds with zero revert
+python scripts/revelator_mode.py switch multi</code></pre>
+    <p>Or simply double-click <code>fix_android_mode.bat</code> on Windows.</p>
+
+    <h2>Zero-AI Vocal Auto-Tuner &amp; 5 Tested Fat Channel Presets</h2>
+    <pre><code>python scripts/auto_tune.py my_vocal.wav --style natural --name "My Natural" --install
+# Or match the tone of a reference dry recording (e.g., phone mic take):
+python scripts/auto_tune.py revelator_take.wav --ref phone_mic.wav --install</code></pre>
+    <p>Detects analog clipping, plosives, room noise floor, voiced RMS, and 4-band tonal balance using pure local DSP (<code>numpy</code> only for WAV) and outputs a ready-to-import Universal Control <code>.channel</code> preset.</p>
+
+    <h2>Hardware Verification Matrix</h2>
+    <table>
+      <thead>
+        <tr><th>Model</th><th>Single Mode (Windows)</th><th>Multi Mode (Android/macOS)</th><th>Hardware Verified</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>PreSonus Revelator</td><td><code>0x0D08</code></td><td><code>0x0D09</code></td><td><strong>Yes</strong> (Windows 11 + Android 17)</td></tr>
+        <tr><td>PreSonus Revelator Dynamic</td><td><code>0x0D0A</code></td><td><code>0x0D0B</code></td><td>Same INF rule; community test welcome</td></tr>
+        <tr><td>PreSonus Revelator io24</td><td><code>0x0422</code></td><td><code>0x0423</code></td><td>Same INF rule; community test welcome</td></tr>
+        <tr><td>PreSonus Revelator io44</td><td><code>0x0424</code></td><td><code>0x0425</code></td><td>Same INF rule; community test welcome</td></tr>
+      </tbody>
+    </table>
+
+    <footer>
+      Open-source MIT toolkit by <a href="https://github.com/yinrong">yinrong</a> ·
+      <a href="https://github.com/yinrong/presonus-revelator-toolkit">GitHub Repository</a> ·
+      <a href="https://github.com/yinrong/presonus-revelator-toolkit/blob/main/DEVELOPMENT.md">Developer &amp; AI Skill Guide</a>
+    </footer>
+  </main>
+</body>
+</html>
